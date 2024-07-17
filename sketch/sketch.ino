@@ -47,7 +47,7 @@ bool doPeriodically(uint32_t *pnow, uint32_t *sched, uint32_t sampling_period)
     if ((int32_t)(now - *sched) > 0) // late, catch up
     {
         *sched = now;
-        Serial.println("# WARNING: missed a sample");
+        Serial.println(F("# WARNING: missed a sample"));
     }
 
     return true;
@@ -56,41 +56,41 @@ bool doPeriodically(uint32_t *pnow, uint32_t *sched, uint32_t sampling_period)
 
 void print_usage()
 {
-    Serial.println("# Data logger for Arduino Nano");
-    Serial.println("# Authored by Christoph Rackwitz, 2024-06-14");
-    Serial.println("# This periodically reads analog and digital inputs, writes to UART");
-    Serial.println("# Analog channel values are in range 0..1023.");
-    Serial.println("# Digital channel values are reported as 0 or 1024.");
-    Serial.println("# Backspace is supported for line editing. Ctrl-C discards all input.");
-    Serial.println("# Usage: <command><ENTER>");
-    Serial.println("#   h help ?    print help");
-    Serial.println("#   s           print status (enabled channels, sampling period/freq)");
-    Serial.println("#   b<baud>     change baud rate. 1000000 and 2000000 baud are supported.");
-    Serial.println("#   <ENTER>     toggle sampling (blank command)");
-    Serial.println("#   <CTRL-C>    stop sampling");
-    Serial.println("#   .           stop sampling");
-    Serial.println("#   p<period>   set sampling period in ms");
-    Serial.println("#   f<freq>     set sampling frequency in Hz, floats allowed, 1 ms resolution");
-    Serial.println("#   t           toggle printing of timestamp (in ms)");
-    Serial.println("#   aN,N...  a  disable analog channels, N = 0..7");
-    Serial.println("#   AN,N...  A  enable analog channels,  N = 0..7");
-    Serial.println("#   dN,N...  d  disable digital channels, N = 0..19");
-    Serial.println("#   DN,N...     enable digital channels,  N = 0..19");
+    Serial.println(F("# Data logger for Arduino Nano"));
+    Serial.println(F("# Authored by Christoph Rackwitz, 2024-06-14"));
+    Serial.println(F("# This periodically reads analog and digital inputs, writes to UART"));
+    Serial.println(F("# Analog channel values are in range 0..1023."));
+    Serial.println(F("# Digital channel values are reported as 0 or 1024."));
+    Serial.println(F("# Backspace is supported for line editing. Ctrl-C discards all input."));
+    Serial.println(F("# Usage: <command><ENTER>"));
+    Serial.println(F("#   h help ?    print help"));
+    Serial.println(F("#   s           print status (enabled channels, sampling period/freq)"));
+    Serial.println(F("#   b<baud>     change baud rate. 1000000 and 2000000 baud are supported."));
+    Serial.println(F("#   <ENTER>     toggle sampling (blank command)"));
+    Serial.println(F("#   <CTRL-C>    stop sampling"));
+    Serial.println(F("#   .           stop sampling"));
+    Serial.println(F("#   p<period>   set sampling period in ms"));
+    Serial.println(F("#   f<freq>     set sampling frequency in Hz, floats allowed, 1 ms resolution"));
+    Serial.println(F("#   t           toggle printing of timestamp (in ms)"));
+    Serial.println(F("#   aN,N...  a  disable analog channels, N = 0..7"));
+    Serial.println(F("#   AN,N...  A  enable analog channels,  N = 0..7"));
+    Serial.println(F("#   dN,N...  d  disable digital channels, N = 0..19"));
+    Serial.println(F("#   DN,N...     enable digital channels,  N = 0..19"));
 }
 
 
 void print_status()
 {
-    Serial.print("# Sampling: ");
-    Serial.print(sampling_enabled ? "enabled, " : "disabled, ");
+    Serial.print(F("# Sampling: "));
+    Serial.print(sampling_enabled ? F("enabled, ") : F("disabled, "));
     Serial.print(sampling_period);
-    Serial.print(" ms (");
+    Serial.print(F(" ms ("));
     Serial.print(1000.f / sampling_period);
-    Serial.print(" Hz), ");
-    Serial.print(print_timestamp ? "with" : "without");
-    Serial.println(" timestamps");
+    Serial.print(F(" Hz), "));
+    Serial.print(print_timestamp ? F("with") : F("without"));
+    Serial.println(F(" timestamps"));
 
-    Serial.print("# Analog:   ");
+    Serial.print(F("# Analog:   "));
     for (int index = 0; index < num_analog_channels; ++index)
     {
         // Serial.print(enabled_analog[index] ? '+' : '-');
@@ -101,13 +101,13 @@ void print_status()
             if (index < 10) Serial.print(' '); Serial.print(index); Serial.print(' ');
         }
         else
-            Serial.print(" _ ");
+            Serial.print(F(" _ "));
 
     }
-    Serial.println("(A0..7)");
+    Serial.println(F("(A0..7)"));
     // Serial.println();
 
-    Serial.print("# Digital:  ");
+    Serial.print(F("# Digital:  "));
     for (int index = 0; index < num_digital_channels; ++index)
     {
         // Serial.print(enabled_digital[index] ? '+' : '-');
@@ -118,9 +118,9 @@ void print_status()
             if (index < 10) Serial.print(' '); Serial.print(index); Serial.print(' ');
         }
         else
-            Serial.print(" _ ");
+            Serial.print(F(" _ "));
     }
-    Serial.println("(D0..19, D14..19 = A0..5)");
+    Serial.println(F("(D0..19, D14..19 = A0..5)"));
 }
 
 
@@ -169,7 +169,7 @@ void handle_channel_toggle(String line)
     {
         if (ctype == CT_DIGITAL && action == AT_ENABLE)
         {
-            Serial.println("# ERROR: will NOT enable all digital channels");
+            Serial.println(F("# ERROR: will NOT enable all digital channels"));
         }
         else
         {
@@ -244,9 +244,9 @@ void handle_serial_input()
         }
         else if (c == 0x03) // Ctrl+C
         {
-            Serial.println("# ABORT");
+            Serial.println(F("# ABORT"));
             // rewrite as "stop" command
-            linebuf = "."; line_complete = true;
+            linebuf = F("."); line_complete = true;
             break;
         }
         // else if (c == 27) // initiates escape sequence, followed by 91 '[' and then something else (perhaps a letter)
@@ -264,22 +264,22 @@ void handle_serial_input()
 
     bool do_print_status = false;
 
-    if (linebuf == "h" || linebuf == "?" || linebuf == "help")
+    if (linebuf == F("h") || linebuf == F("?") || linebuf == F("help"))
     {
         print_usage();
     }
 
-    else if (linebuf == "s") // status
+    else if (linebuf == F("s")) // status
     {
         do_print_status = true;
     }
 
-    else if (linebuf == ".")
+    else if (linebuf == F("."))
     {
         sampling_enabled = false;
         do_print_status = true;
     }
-    else if (linebuf == "")
+    else if (linebuf == F(""))
     {
         sampling_enabled = !sampling_enabled;
         if (sampling_enabled)
@@ -287,26 +287,26 @@ void handle_serial_input()
         do_print_status = true;
     }
 
-    else if (linebuf.startsWith("b")) // baud rate
+    else if (linebuf.startsWith(F("b"))) // baud rate
     {
         if (linebuf.length() <= 1)
         {
-            Serial.println("# ERROR: missing baud rate value after command 'b'");
+            Serial.println(F("# ERROR: missing baud rate value after command 'b'"));
         }
         else
         {
             long int const baud = linebuf.substring(1).toInt();
-            Serial.println("# Changing baud rate to: " + String(baud));
+            Serial.print(F("# Changing baud rate to: ")); Serial.println(baud);
             Serial.begin(baud);
-            Serial.println("# Baud rate changed to: " + String(baud));
+            Serial.print(F("# Baud rate changed to: ")); Serial.println(baud);
         }
     }
 
-    else if (linebuf.startsWith("p")) // period
+    else if (linebuf.startsWith(F("p"))) // period
     {
         if (linebuf.length() <= 1)
         {
-            Serial.println("# ERROR: missing period value after command 'p'");
+            Serial.println(F("# ERROR: missing period value after command 'p'"));
         }
         else
         {
@@ -315,11 +315,11 @@ void handle_serial_input()
             do_print_status = true;
         }
     }
-    else if (linebuf.startsWith("f")) // frequency
+    else if (linebuf.startsWith(F("f"))) // frequency
     {
         if (linebuf.length() <= 1)
         {
-            Serial.println("# ERROR: missing frequency value after command 'f'");
+            Serial.println(F("# ERROR: missing frequency value after command 'f'"));
         }
         else
         {
@@ -330,13 +330,13 @@ void handle_serial_input()
             do_print_status = true;
         }
     }
-    else if (linebuf == "t") // timestamp
+    else if (linebuf == F("t")) // timestamp
     {
         print_timestamp = !print_timestamp;
         do_print_status = true;
     }
 
-    else if (linebuf.startsWith("A") || linebuf.startsWith("a") || linebuf.startsWith("D") || linebuf.startsWith("d"))
+    else if (linebuf.startsWith(F("A")) || linebuf.startsWith(F("a")) || linebuf.startsWith(F("D")) || linebuf.startsWith(F("d")))
     {
         handle_channel_toggle(linebuf);
         do_print_status = true;
@@ -344,7 +344,7 @@ void handle_serial_input()
 
     else
     {
-        Serial.print("# ERROR: unknown command: ");
+        Serial.print(F("# ERROR: unknown command: "));
         Serial.println(linebuf);
         print_usage();
     }
