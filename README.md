@@ -23,6 +23,7 @@ The data logger accepts commands via the serial interface. The following command
 - `p<period>`: Set sampling period in ms.
 - `f<freq>`: Set sampling frequency in Hz, floats allowed, 1 ms resolution.
 - `t`: Toggle printing of timestamps (in milliseconds).
+- `y<factor>`: Set value scaling factor, floats and fractions allowed, 0 = disabled.
 - `aN,N...`, `a`: Disable analog channels, N = 0..7.
 - `AN,N...`, `A`: Enable analog channels, N = 0..7.
 - `dN,N...`, `d`: Disable digital channels, N = 0..19.

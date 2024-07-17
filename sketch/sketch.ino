@@ -13,6 +13,9 @@ uint32_t sampling_period = 1000;
 bool sampling_enabled = true;
 bool print_timestamp = false;
 
+bool apply_scaling = false;
+float scaling_factor = 1.0f;
+
 int const num_analog_channels = 8;
 int const num_digital_channels = 20;
 bool enabled_analog[num_analog_channels] { false }; // A0 .. 7
@@ -57,7 +60,7 @@ bool doPeriodically(uint32_t *pnow, uint32_t *sched, uint32_t sampling_period)
 void print_usage()
 {
     Serial.println(F("# Data logger for Arduino Nano"));
-    Serial.println(F("# Authored by Christoph Rackwitz, 2024-06-14"));
+    Serial.println(F("# Authored by Christoph Rackwitz, 2024"));
     Serial.println(F("# This periodically reads analog and digital inputs, writes to UART"));
     Serial.println(F("# Analog channel values are in range 0..1023."));
     Serial.println(F("# Digital channel values are reported as 0 or 1024."));
@@ -72,6 +75,7 @@ void print_usage()
     Serial.println(F("#   p<period>   set sampling period in ms"));
     Serial.println(F("#   f<freq>     set sampling frequency in Hz, floats allowed, 1 ms resolution"));
     Serial.println(F("#   t           toggle printing of timestamp (in ms)"));
+    Serial.println(F("#   y<factor>   set scaling factor for printed values. 0 disables scaling. fractions allowed."));
     Serial.println(F("#   aN,N...  a  disable analog channels, N = 0..7"));
     Serial.println(F("#   AN,N...  A  enable analog channels,  N = 0..7"));
     Serial.println(F("#   dN,N...  d  disable digital channels, N = 0..19"));
@@ -81,14 +85,20 @@ void print_usage()
 
 void print_status()
 {
-    Serial.print(F("# Sampling: "));
+    Serial.print(F("# Sampling "));
     Serial.print(sampling_enabled ? F("enabled, ") : F("disabled, "));
     Serial.print(sampling_period);
     Serial.print(F(" ms ("));
     Serial.print(1000.f / sampling_period);
     Serial.print(F(" Hz), "));
     Serial.print(print_timestamp ? F("with") : F("without"));
-    Serial.println(F(" timestamps"));
+    Serial.print(F(" timestamps"));
+    Serial.print(F(", scaling "));
+    if (apply_scaling)
+        Serial.print(scaling_factor, 5);
+    else
+        Serial.print(F("disabled"));
+    Serial.println();
 
     Serial.print(F("# Analog:   "));
     for (int index = 0; index < num_analog_channels; ++index)
@@ -342,6 +352,48 @@ void handle_serial_input()
         do_print_status = true;
     }
 
+    else if (linebuf.startsWith(F("y")))
+    {
+        // on-device scaling for values (y)
+        // no argument: print current scaling factor
+        // argument: factor to scale by. if it contains a '/', evaluate as fraction of floats.
+        // if factor is 0, disable scaling.
+
+        if (linebuf.length() > 1)
+        {
+            String const arg = linebuf.substring(1);
+            if (arg.indexOf('/') != -1)
+            {
+                float const num = arg.substring(0, arg.indexOf('/')).toFloat();
+                float const den = arg.substring(arg.indexOf('/') + 1).toFloat();
+                Serial.print("# Scaling factor: ");
+                Serial.print(num);
+                Serial.print(" / ");
+                Serial.print(den);
+                Serial.print(" = ");
+
+                scaling_factor = num / den;
+                Serial.println(scaling_factor, 5);
+            }
+            else
+            {
+                scaling_factor = arg.toFloat();
+            }
+
+            apply_scaling = (scaling_factor != 0);
+        }
+
+        if (apply_scaling)
+        {
+            Serial.print(F("# Scaling enabled, factor: "));
+            Serial.println(scaling_factor, 5);
+        }
+        else
+        {
+            Serial.println(F("# Scaling disabled"));
+        }
+    }
+
     else
     {
         Serial.print(F("# ERROR: unknown command: "));
@@ -382,6 +434,20 @@ void setup()
 }
 
 
+void print_scaled(uint16_t raw)
+{
+    if (apply_scaling)
+    {
+        float const scaled = raw * scaling_factor;
+        Serial.print(scaled, 3);
+    }
+    else
+    {
+        Serial.print(raw);
+    }
+}
+
+
 void loop()
 {
     handle_serial_input();
@@ -407,7 +473,7 @@ void loop()
         {
             uint16_t const val = analogRead(index);
             if (first_written) Serial.print(',');
-            Serial.print(val); first_written = true;
+            print_scaled(val); first_written = true;
         }
     }
 
@@ -417,7 +483,7 @@ void loop()
         {
             bool const val = digitalRead(index);
             if (first_written) Serial.print(',');
-            Serial.print(val ? "1024" : "0"); first_written = true;
+            print_scaled(val ? 1024 : 0); first_written = true;
         }
     }
 
